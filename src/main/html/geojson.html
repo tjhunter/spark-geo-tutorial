@@ -23,7 +23,7 @@
             map.addLayer(layer);
             map.setCenter(new OpenLayers.LonLat(lon, lat), zoom);
 	    vector_layer = new OpenLayers.Layer.Vector("Vector Layer");
- 	    format = new OpenLayers.Format.GeoJSON();
+ 	    format = new OpenLayers.Format.WKT();
             map.addLayer(vector_layer);
 //             var featurecollection = {
 //               "type": "FeatureCollection", 
