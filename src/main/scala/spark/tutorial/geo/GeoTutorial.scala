@@ -34,7 +34,13 @@ case class Datum(
 /**
  * Some data representing a taxi course.
  */
-case class TaxiCourse(val id: String, val start: Coordinate, val end: Coordinate)
+case class TaxiCourse(
+    val id: String,
+    val start: Coordinate,
+    val end: Coordinate) {
+  def toWKT:String = "LINESTRING (%f %f, %f %f)" format (start.lon, start.lat, end.lon, end.lat) 
+}
+
 /**
  * A few utility functions that are not particularly interesting for the understanding
  * of the problem.
@@ -44,11 +50,16 @@ object GeoTutorialUtils {
    * Converts a collection of coordinate to a collection of points in the WKT string format.
    * The resulting string can be pasted onto the display.
    */
-  def coordinateToWKTPoints(locations: Seq[Coordinate]): String = {
+  def wkt(locations: Seq[Coordinate]): String = {
     val s = locations.map(_.toWKT).mkString(",")
     "GEOMETRYCOLLECTION(%s)" format s
   }
 
+  def wkt2(courses: Seq[TaxiCourse]): String = {
+    val s = courses.map(_.toWKT).mkString(",")
+    "GEOMETRYCOLLECTION(%s)" format s
+  }
+  
   private[this] val formatter = ISODateTimeFormat.dateHourMinuteSecond()
   /**
    * Reads a line of the file into a Datum object.
@@ -76,8 +87,11 @@ object GeoTutorialUtils {
       course :: other_courses
     }
   }
+  
+  implicit def dateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan(_ isBefore _)
+
   def splitIntoTaxiCourses(obs:Seq[Datum]):Seq[TaxiCourse] = {
-    splitIntoTaxiCoursesReq(obs.sortBy(_.date)).toArray
+    splitIntoTaxiCoursesReq(obs.sortBy(_.date)).toArray.toSeq
   }
 }
 
@@ -97,10 +111,15 @@ object GeoTutorial {
     println(locations.first())
 
     val sample_locations = locations.sample(false, 0.1, 1).collect()
-    println(coordinateToWKTPoints(sample_locations.map(_.location)))
+    println(wkt(sample_locations.map(_.location)))
 
     val by_date_drivers = locations.groupBy(datum => (datum.date, datum.id))
     println(by_date_drivers.first())
+    
+    val taxi_courses = by_date_drivers.flatMap({case (key, seq) => splitIntoTaxiCourses(seq)})
+    
+    println(wkt(taxi_courses.collect().map(_.start)))
+    
   }
 
 }
