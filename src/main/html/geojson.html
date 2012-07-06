@@ -16,6 +16,7 @@
 	var vector_layer;
 	var feature_style;
 	var all_features;
+	var external_load;
 
         function init(){
             map = new OpenLayers.Map( 'map' );
@@ -36,8 +37,7 @@
         }
     });
     // Allow loading data from a different source like ?external=snippet.wkt
-    var external = OpenLayers.Util.getParameters(window.location.href).external;
-//     renderer = (renderer) ? [renderer] : OpenLayers.Layer.Vector.prototype.renderers;
+    external_load = OpenLayers.Util.getParameters(window.location.href).external;
             layer = new OpenLayers.Layer.WMS( "OpenLayers WMS", 
                     "http://vmap0.tiles.osgeo.org/wms/vmap0",
                     {layers: 'basic'} );
@@ -48,11 +48,25 @@
     });
  	    format = new OpenLayers.Format.WKT();
             map.addLayer(vector_layer);
+	    if (external_load) {
+	      deserialize(external_load);
+	    }
         }
 
-        function deserialize() {
-            var element = document.getElementById('text');
-            var features = format.read(element.value);
+        function deserialize(external_load_url) {
+	    var features;
+	    var element = document.getElementById('text');
+            if (external_load_url) {
+	      var oRequest = new XMLHttpRequest();
+	      oRequest.open( "GET", external_load_url,false);
+	      oRequest.send(null);
+	      data = oRequest.responseText;
+	      element.value = 'Loading external url: '+external_load_url;
+	      features = format.read(data);
+	    } else {
+	      features = format.read(element.value);
+	    }
+            
             var bounds;
             if(features) {
                 if(features.constructor != Array) {
@@ -95,7 +109,7 @@ demonstration.
             <br> 
             <textarea id="text"></textarea>
             <br>
-            <input type="button" value="add feature" onclick="deserialize();" />
+            <input type="button" value="add feature" onclick="deserialize(null);" />
         </div>
 
   </body>

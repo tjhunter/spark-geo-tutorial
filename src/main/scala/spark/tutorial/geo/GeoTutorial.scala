@@ -142,7 +142,7 @@ object GeoTutorialUtils {
     }
   }
 
-  private[this] implicit def dateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan(_ isBefore _)
+  implicit def dateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan(_ isBefore _)
 
   /**
    * Takes a sequence of observations for a driver and splits it into a sequence of taxi trips.
@@ -162,8 +162,8 @@ object GeoTutorial {
   def exec(sc: SparkContext): Unit = {
 
     import spark.tutorial.geo.GeoTutorialUtils._
-    import spark.tutorial.geo._
-    import spark._
+//    import spark.tutorial.geo._
+//    import spark._
     val fname = "/tmp/cabspotting.txt"
     val numSplits = 1
     val raw_data = sc.textFile(fname, numSplits)
@@ -181,6 +181,7 @@ object GeoTutorial {
 
     val by_date_drivers = observations.groupBy(datum => (datum.date.toYearMonthDay(), datum.id))
     println("num blocks:" + by_date_drivers.count())
+    val one = println(locationsToWKTString(by_date_drivers.first()._2.sortBy(_.date).map(_.location)))
 
     val taxiTrips = by_date_drivers.flatMap({ case (key, seq) => splitIntoTaxiTrips(seq) })
 
