@@ -13,4 +13,3 @@ libraryDependencies += "joda-time" % "joda-time" % "2.1"
 libraryDependencies += "org.joda" % "joda-convert" % "1.2"
 
 libraryDependencies += "org.scala-tools.time" %% "time" % "0.5"
-

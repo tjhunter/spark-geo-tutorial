@@ -14,61 +14,46 @@
         var map, layer;
 	var format;
 	var vector_layer;
+	var feature_style;
+
+	var features_;
 
         function init(){
             map = new OpenLayers.Map( 'map' );
+
+    var styles = new OpenLayers.StyleMap({
+        "default": {
+            pointRadius: 10,
+            strokeColor: "fuchsia",
+            strokeWidth: 2,
+            fillColor: "lime",
+            fillOpacity: 0.6
+        },
+        "select": {
+            pointRadius: 20,
+            fillOpacity: 1,
+            rotation: 45
+        }
+    });
+    // Allow loading data from a different source like ?external=snippet.wkt
+    var external = OpenLayers.Util.getParameters(window.location.href).external;
+//     renderer = (renderer) ? [renderer] : OpenLayers.Layer.Vector.prototype.renderers;
             layer = new OpenLayers.Layer.WMS( "OpenLayers WMS", 
                     "http://vmap0.tiles.osgeo.org/wms/vmap0",
                     {layers: 'basic'} );
-//             layer = new OpenLayers.Layer.OSM();
-// 	    layer = new OpenLayers.Layer.Google("Google Streets");
             map.addLayer(layer);
             map.setCenter(new OpenLayers.LonLat(lon, lat), zoom);
-	    vector_layer = new OpenLayers.Layer.Vector("Vector Layer");
+    vector_layer = new OpenLayers.Layer.Vector("Graphics", {
+        styleMap: styles
+    });
  	    format = new OpenLayers.Format.WKT();
             map.addLayer(vector_layer);
-//             var featurecollection = {
-//               "type": "FeatureCollection", 
-//               "features": [
-//                 {"geometry": {
-//                     "type": "GeometryCollection", 
-//                     "geometries": [
-//                         {
-//                             "type": "LineString", 
-//                             "coordinates": 
-//                                 [[11.0878902207, 45.1602390564], 
-//                                 [15.01953125, 48.1298828125]]
-//                         }, 
-//                         {
-//                             "type": "Polygon", 
-//                             "coordinates": 
-//                                 [[[11.0878902207, 45.1602390564], 
-//                                   [14.931640625, 40.9228515625], 
-//                                   [0.8251953125, 41.0986328125], 
-//                                   [7.63671875, 48.96484375], 
-//                                   [11.0878902207, 45.1602390564]]]
-//                         },
-//                         {
-//                             "type":"Point", 
-//                             "coordinates":[15.87646484375, 44.1748046875]
-//                         }
-//                     ]
-//                 }, 
-//                 "type": "Feature", 
-//                 "properties": {}}
-//               ]
-//            };
-//            var geojson_format = new OpenLayers.Format.GeoJSON();
-//            var vector_layer = new OpenLayers.Layer.Vector(); 
-//            map.addLayer(vector_layer);
-//            vector_layer.addFeatures(geojson_format.read(featurecollection));
-
         }
 
         function deserialize() {
             var element = document.getElementById('text');
-            var type = "geojson";
-            var features = format.read(element.value); //formats['in'][type].read(element.value);
+            var features = format.read(element.value);
+	    features_ = features;
             var bounds;
             if(features) {
                 if(features.constructor != Array) {
@@ -80,34 +65,33 @@
                     } else {
                         bounds.extend(features[i].geometry.getBounds());
                     }
-
                 }
                 vector_layer.addFeatures(features);
                 map.zoomToExtent(bounds);
                 var plural = (features.length > 1) ? 's' : '';
                 element.value = features.length + ' feature' + plural + ' added';
             } else {
-                element.value = 'Bad input ' + type;
+                element.value = 'Bad input ';
             }
         }
 
     </script>
   </head>
   <body onload="init()">
-    <h1 id="title">GeoJSON Mapping tool</h1>
+    <h1 id="title">WKT Mapping tool</h1>
 
       <p id="shortdesc">
-        Demonstrate the use of the GeoJSON format.
+        Allows for easily plotting data in the <a href="http://en.wikipedia.org/wiki/Well-known_text">WKT format</a>. You can use it with the Spark geodata 
+demonstration.
     </p>
     <div id="map" class="largemap"></div>
     <div id="docs">
-        <p>This example uses the GeoJSON format.</p>
     </div>
 
         <div id="input">
-            <p>Type here some geodata encoded in the GeoJSON format. They will be added on the map.</p>
+            <p>Type here some geodata encoded in the WKT format. They will be added on the map.</p>
             <br> 
-            <textarea id="text">paste text here...</textarea>
+            <textarea id="text"></textarea>
             <br>
             <input type="button" value="add feature" onclick="deserialize();" />
         </div>
