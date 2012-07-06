@@ -15,11 +15,11 @@
 	var format;
 	var vector_layer;
 	var feature_style;
-
-	var features_;
+	var all_features;
 
         function init(){
             map = new OpenLayers.Map( 'map' );
+	    all_features = [];
 
     var styles = new OpenLayers.StyleMap({
         "default": {
@@ -53,20 +53,22 @@
         function deserialize() {
             var element = document.getElementById('text');
             var features = format.read(element.value);
-	    features_ = features;
             var bounds;
             if(features) {
                 if(features.constructor != Array) {
                     features = [features];
                 }
                 for(var i=0; i<features.length; ++i) {
-                    if (!bounds) {
-                        bounds = features[i].geometry.getBounds();
-                    } else {
-                        bounds.extend(features[i].geometry.getBounds());
-                    }
+                    all_features.push(features[i])
                 }
                 vector_layer.addFeatures(features);
+                for(var i=0; i<all_features.length; ++i) {
+		    if (!bounds) {
+                        bounds = all_features[i].geometry.getBounds();
+                    } else {
+                        bounds.extend(all_features[i].geometry.getBounds());
+                    }
+                }
                 map.zoomToExtent(bounds);
                 var plural = (features.length > 1) ? 's' : '';
                 element.value = features.length + ' feature' + plural + ' added';
