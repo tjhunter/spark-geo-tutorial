@@ -1,0 +1,9 @@
+#!/bin/bash
+EXTRA_ARGS=""
+if [ "$MESOS_HOME" != "" ]; then
+  EXTRA_ARGS="-Djava.library.path=$MESOS_HOME/lib/java"
+fi
+export SPARK_HOME=$(cd "$(dirname $0)/.."; pwd)
+cd $SPARK_HOME
+echo $SPARK_HOME
+java -Xmx800M -XX:MaxPermSize=150m $EXTRA_ARGS -jar $SPARK_HOME/sbt/sbt-launch-*.jar "$@"

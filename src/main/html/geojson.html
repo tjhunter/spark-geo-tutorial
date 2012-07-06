@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="http://openlayers.org/dev/theme/default/style.css" type="text/css">
+    <link rel="stylesheet" href="style.css" type="text/css">
+    <script src="http://openlayers.org/dev/OpenLayers.js"></script>
+    <script type="text/javascript">
+        var lon = 5;
+        var lat = 40;
+        var zoom = 5;
+        var map, layer;
+	var format;
+	var vector_layer;
+	var feature_style;
+	var all_features;
+	var external_load;
+
+        function init(){
+            map = new OpenLayers.Map( 'map' );
+	    all_features = [];
+
+    var styles = new OpenLayers.StyleMap({
+        "default": {
+            pointRadius: 10,
+            strokeColor: "fuchsia",
+            strokeWidth: 2,
+            fillColor: "lime",
+            fillOpacity: 0.6
+        },
+        "select": {
+            pointRadius: 20,
+            fillOpacity: 1,
+            rotation: 45
+        }
+    });
+    // Allow loading data from a different source like ?external=snippet.wkt
+    external_load = OpenLayers.Util.getParameters(window.location.href).external;
+            layer = new OpenLayers.Layer.WMS( "OpenLayers WMS", 
+                    "http://vmap0.tiles.osgeo.org/wms/vmap0",
+                    {layers: 'basic'} );
+            map.addLayer(layer);
+            map.setCenter(new OpenLayers.LonLat(lon, lat), zoom);
+    vector_layer = new OpenLayers.Layer.Vector("Graphics", {
+        styleMap: styles
+    });
+ 	    format = new OpenLayers.Format.WKT();
+            map.addLayer(vector_layer);
+	    if (external_load) {
+	      deserialize(external_load);
+	    }
+        }
+
+        function deserialize(external_load_url) {
+	    var features;
+	    var element = document.getElementById('text');
+            if (external_load_url) {
+	      var oRequest = new XMLHttpRequest();
+	      oRequest.open( "GET", external_load_url,false);
+	      oRequest.send(null);
+	      data = oRequest.responseText;
+	      element.value = 'Loading external url: '+external_load_url;
+	      features = format.read(data);
+	    } else {
+	      features = format.read(element.value);
+	    }
+            
+            var bounds;
+            if(features) {
+                if(features.constructor != Array) {
+                    features = [features];
+                }
+                for(var i=0; i<features.length; ++i) {
+                    all_features.push(features[i])
+                }
+                vector_layer.addFeatures(features);
+                for(var i=0; i<all_features.length; ++i) {
+		    if (!bounds) {
+                        bounds = all_features[i].geometry.getBounds();
+                    } else {
+                        bounds.extend(all_features[i].geometry.getBounds());
+                    }
+                }
+                map.zoomToExtent(bounds);
+                var plural = (features.length > 1) ? 's' : '';
+                element.value = features.length + ' feature' + plural + ' added';
+            } else {
+                element.value = 'Bad input ';
+            }
+        }
+
+    </script>
+  </head>
+  <body onload="init()">
+    <h1 id="title">WKT Mapping tool</h1>
+
+      <p id="shortdesc">
+        Allows for easily plotting data in the <a href="http://en.wikipedia.org/wiki/Well-known_text">WKT format</a>. You can use it with the Spark geodata 
+demonstration.
+    </p>
+    <div id="map" class="largemap"></div>
+    <div id="docs">
+    </div>
+
+        <div id="input">
+            <p>Type here some geodata encoded in the WKT format. They will be added on the map.</p>
+            <br> 
+            <textarea id="text"></textarea>
+            <br>
+            <input type="button" value="add feature" onclick="deserialize(null);" />
+        </div>
+
+  </body>
+</html>
