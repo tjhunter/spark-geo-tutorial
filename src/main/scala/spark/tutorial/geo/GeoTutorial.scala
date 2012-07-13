@@ -163,7 +163,7 @@ object GeoTutorial {
 
     import spark.tutorial.geo.GeoTutorialUtils._
 //    import spark.tutorial.geo._
-//    import spark._
+   import spark._
 val fname = "s3n://%s:%s@cabspotting-data/2009-3-22.txt".format(System.getenv("AWS_ACCESS_KEY"),System.getenv("AWS_SECRET_ACCESS_KEY"))
 val numSplits = 1
     val raw_data = sc.textFile(fname, numSplits)
@@ -242,7 +242,7 @@ val numSplits = 1
         println("%d :  %s".format(size, TaxiTrip("", start, from).toWKT))
       }
       clusterCenters = centers
-      println(wkt2(clusterCenters.take(20).map(z => new TaxiTrip("", z._1._1, z._1._2))))
+      println(wkt2(clusterCenters.take(50).map(z => new TaxiTrip("", z._1._1, z._1._2))))
     }
 
     // More work to look at a cluster
@@ -250,7 +250,7 @@ val numSplits = 1
 
     def union(b: BoundingBox, c: Coordinate) = b.union(c)
     def combo(b1: BoundingBox, b2: BoundingBox) = b1.union(b2)
-    for (cluster_id <- Array(0, 1, 2, 10, 20)) {
+    for (cluster_id <- Array(10)) {
       val cluster_trips = cached_clustered_trips.filter(_._1 == cluster_id).map(_._2)
       val fromBBox = cluster_trips.map(_.start).aggregate(emptyBoundingBox)(union _, combo _)
       val toBBox = cluster_trips.map(_.end).aggregate(emptyBoundingBox)(union _, combo _)
