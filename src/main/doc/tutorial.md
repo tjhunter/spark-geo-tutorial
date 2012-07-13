@@ -163,13 +163,13 @@ How many did we get?
 
 This is enough to get a rough estimate. We are now going to vizualize this data in the browser. For your convenience,
 we have added a few methods that converts all the geo objects into the WKT (well known text) format. You can
-plot the data in your browser using the web page here: ...
+plot the data in your browser using the web page [here](http://www.eecs.berkeley.edu/~tjhunter/sparkdemo/geojson.html)
 
 ```scala
   println(locationsToWKTString(localSampleObservations.map(_.location)))
 ```
 
-You can copy the resulting string in the browser. You should get a display like this:
+You can copy the resulting string in the browser. You should get a display like [this](http://www.eecs.berkeley.edu/~tjhunter/sparkdemo/geojson.html?external=examplepoints.wkt):
 
 Now we are going to extract the taxi trips from this data. A taxi trip is a sequence of hired points, followed and 
 starting with non-hired points. First, we will partition all the observations by day and by driver, and then work
@@ -193,3 +193,7 @@ Since we are going to make some repeated calls to this dataset, we will ask spar
 ```
 
 Now, we are going to cluster the trips by origin and destination, using the K-means algorithm.
+
+Explain [final](http://www.eecs.berkeley.edu/~tjhunter/sparkdemo/geojson.html?external=cluster0)
+[outputs](http://www.eecs.berkeley.edu/~tjhunter/sparkdemo/geojson.html?external=cluster1) of 
+[clusters](http://www.eecs.berkeley.edu/~tjhunter/sparkdemo/geojson.html?external=cluster10)
