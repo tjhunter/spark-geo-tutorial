@@ -162,10 +162,11 @@ object GeoTutorial {
   def exec(sc: SparkContext): Unit = {
 
     import spark.tutorial.geo.GeoTutorialUtils._
-//    import spark.tutorial.geo._
+   import spark.tutorial.geo._
 //    import spark._
-    val fname = "/tmp/cabspotting.txt"
-    val numSplits = 1
+val fname = "s3n://%s:%s@cabspotting-data/2009-3-22.txt".format(System.getenv("AWS_ACCESS_KEY"),System.getenv("AWS_SECRET_ACCESS_KEY"))
+val numSplits = 1
+val raw_data = sc.textFile(fname)
     val raw_data = sc.textFile(fname, numSplits)
 
     println("Number of raw data points: " + raw_data.count)

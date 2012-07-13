@@ -6,7 +6,7 @@ object MyBuild extends Build {
     println("Target path is: "+target)
     def sparkFilter(f:java.io.File):Boolean = {
       val s = f.toString
-      if ((s.contains("spark")&& !s.contains("classes")) || s.contains("mesos")) {
+      if ((s.contains("spark") && !s.contains("classes")) || s.contains("mesos") || s.contains(".sbt/")) {
         false
       } else {
         true
