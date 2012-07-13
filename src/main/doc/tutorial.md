@@ -19,8 +19,8 @@ Getting started
 
 We will run spark on [EC2] using data already stored in [S3]
 
-[EC2]: xxx
-[S3]: xxx
+[EC2]: http://aws.amazon.com/ec2
+[S3]: http://aws.amazon.com/s3
 
 
 *Setting up the spark and creating an ec2 account*
@@ -29,7 +29,7 @@ Launch a small cluster:
 
 ```bash
 cd spark/ec2
-./spark-ec2 -k radlab_mm_tjhunter -i ~/.ssh/radlab_mm_tjhunter.pem -t m1.medium -m m1.medium launch geo-tutorial
+./spark-ec2 -k radlab_mm_tjhunter -i ~/.ssh/radlab_mm_tjhunter.pem -t m1.medium -m m1.medium -s 1 launch geo-tutorial
 ```
 
 Wait for it to start...
@@ -45,6 +45,7 @@ git pull origin
 Let us use a spark shell for now:
 
 ```bash
+# TODO: run SparkPi instead
 MASTER=localhost:5050 ./spark-shell
 ```
 
@@ -197,3 +198,13 @@ Now, we are going to cluster the trips by origin and destination, using the K-me
 Explain [final](http://www.eecs.berkeley.edu/~tjhunter/sparkdemo/geojson.html?external=cluster0)
 [outputs](http://www.eecs.berkeley.edu/~tjhunter/sparkdemo/geojson.html?external=cluster1) of 
 [clusters](http://www.eecs.berkeley.edu/~tjhunter/sparkdemo/geojson.html?external=cluster10)
+
+Cleanup
+-------
+
+Do not forget to kill your amazon instances at the end!
+
+```bash
+cd spark/ec2
+./spark-ec2 -k radlab_mm_tjhunter -i ~/.ssh/radlab_mm_tjhunter.pem -t m1.medium -m m1.medium -s 1 destroy geo-tutorial
+```
