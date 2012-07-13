@@ -191,6 +191,96 @@ Since we are going to make some repeated calls to this dataset, we will ask spar
 
 Now, we are going to cluster the trips by origin and destination, using the K-means algorithm.
 
+**Explain Kmeans and the code**
+
+Here is the complete code for the clustering step
+
+```scala
+val numClusters = 100
+val numIterations = 10
+var clusterCenters = (for (idx <- 0 until numClusters) yield {
+  val datum = localSampleObservations(idx % localSampleObservations.size)
+  ((datum.location, datum.location), 0)
+}).toArray
+
+var clustered_trips: RDD[(Int, TaxiTrip)] = null
+var clustered_trips_centers: Array[((Coordinate, Coordinate), Int)] = null
+
+for (iter <- 0 until numIterations) {
+  val clusterCenters_bc = sc.broadcast(clusterCenters)
+  clustered_trips_centers = clusterCenters
+  // Aggregate the taxi trips by closeness to each centroid
+  clustered_trips = cachedTaxiTrips.map(trip => {
+    val distances = clusterCenters_bc.value.map(center => {
+      val ((from, to), _) = center
+      val d1 = trip.start.distanceTo(from)
+      val d2 = trip.end.distanceTo(to)
+      math.sqrt(d1 * d1 + d2 * d2)
+    })
+    // Find the argmin
+    val minDistance = distances.min
+    val minIdx = distances.findIndexOf(_ == minDistance)
+    (minIdx, trip)
+  })
+  // Recompute the center of each centroid
+  val tripsByCentroid = clustered_trips.groupBy(_._1).mapValues(_.map(_._2))
+  val newCenters = tripsByCentroid.mapValues(trips => {
+    var count = 0
+    var start_lat = 0.0
+    var start_lon = 0.0
+    var end_lat = 0.0
+    var end_lon = 0.0
+    for (trip <- trips) {
+      count += 1
+      start_lat += trip.start.lat
+      start_lon += trip.start.lon
+      end_lat += trip.end.lat
+      end_lon += trip.end.lon
+    }
+    ((new Coordinate(start_lat / count, start_lon / count), new Coordinate(end_lat / count, end_lon / count)), count)
+  })
+  val centers = newCenters.collect().map(_._2).sortBy(-_._2)
+  println("New centers:\n")
+  for (((start, from), size) <- centers) {
+    println("%d :  %s".format(size, TaxiTrip("", start, from).toWKT))
+  }
+  clusterCenters = centers
+  println(wkt2(clusterCenters.take(50).map(z => new TaxiTrip("", z._1._1, z._1._2))))
+}
+```
+
+Plot all the centroids. Each of them is a pair of (trip start coordinate, trip end coordinate) that
+corresponds to some "mean taxi trip" for this cluster.
+
+```scala
+println(wkt2(clusterCenters.take(50).map(z => new TaxiTrip("", z._1._1, z._1._2))))
+```
+
+Talk about the airport and the south bay.
+
+Each cluster is a set of taxi trip. We are going to look at the start locations and end locations 
+for the most important of them.
+
+The largest clusters have tens of thousands of trips, so we cannot plot them easily. We are going to 
+plot the bounding box of the start locations and the bounding box for the end location instead.
+The bounding box is a perfect candidate for a reduce job:
+
+```scala
+val cached_clustered_trips = clustered_trips.cache()
+
+def union(b: BoundingBox, c: Coordinate) = b.union(c)
+def combo(b1: BoundingBox, b2: BoundingBox) = b1.union(b2)
+for (cluster_id <- Array(10)) {
+  val cluster_trips = cached_clustered_trips.filter(_._1 == cluster_id).map(_._2)
+  val fromBBox = cluster_trips.map(_.start).aggregate(emptyBoundingBox)(union _, combo _)
+  val toBBox = cluster_trips.map(_.end).aggregate(emptyBoundingBox)(union _, combo _)
+  println("Detailled analysis of cluster #" + cluster_id)
+  val (start, from) = clustered_trips_centers(cluster_id)._1
+  println("GEOMETRYCOLLECTION(%s,\n%s,\n%s)" format (fromBBox.toWKT, TaxiTrip("", start, from).toWKT, toBBox.toWKT))
+}
+```
+
+
 Explain [final](http://www.eecs.berkeley.edu/~tjhunter/sparkdemo/geojson.html?external=cluster0)
 [outputs](http://www.eecs.berkeley.edu/~tjhunter/sparkdemo/geojson.html?external=cluster1) of 
 [clusters](http://www.eecs.berkeley.edu/~tjhunter/sparkdemo/geojson.html?external=cluster10)
