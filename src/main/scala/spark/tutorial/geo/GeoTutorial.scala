@@ -162,7 +162,7 @@ object GeoTutorial {
   def exec(sc: SparkContext): Unit = {
 
     import spark.tutorial.geo.GeoTutorialUtils._
-   import spark.tutorial.geo._
+//    import spark.tutorial.geo._
 //    import spark._
 val fname = "s3n://%s:%s@cabspotting-data/2009-3-22.txt".format(System.getenv("AWS_ACCESS_KEY"),System.getenv("AWS_SECRET_ACCESS_KEY"))
 val numSplits = 1
